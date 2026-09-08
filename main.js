@@ -203,6 +203,10 @@ function doAction(square) {
         }
     }
 
+    if (square.piece.type == pieces.PAWN && (square.pos.j == 0 || square.pos.j == 7)) {
+        putPieceByObj(square.pos, new Queen(square.pos, square.piece.color))
+    }
+
 }
 
 
@@ -616,4 +620,3 @@ function toggleTheme() {
     btns.classList.toggle("oak")
     btns.classList.toggle("almond")
 }
-
