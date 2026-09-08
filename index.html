@@ -6,15 +6,13 @@
   </head>
   <body>
     <script src="p5.js"></script>
-    <div>
-      <input class="btn" type="button" value="Change Theme" onclick="toggleTheme()">
+    <div class="app">
+      <div id="board-container"></div>
+      <aside class="panel">
+        <div id="turnText" class="turn-text">White's turn</div>
+        <button class="btn" type="button" onclick="toggleTheme()">Change Theme</button>
+      </aside>
     </div>
-
-    <div>
-      <script src="main.js"></script>
-    </div>
-
-
-
+    <script src="main.js"></script>
   </body>
 </html>

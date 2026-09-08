@@ -47,7 +47,7 @@ function preload() {
 }
 
 function setup() {
-    createCanvas(board_w, board_w)
+    createCanvas(board_w, board_w).parent('board-container')
     board.resizeNN(board_w, board_w)
 
     for (let j = 0; j < 8; j++) {
@@ -59,27 +59,31 @@ function setup() {
     }
 
     fitCanvasToWindow()
+    updateTurnText()
 }
 
 function windowResized() {
     fitCanvasToWindow()
 }
 
-//scales the canvas's on-screen size to the largest square that fits the
-//viewport without overflowing either dimension; the actual render resolution
-//stays fixed and CSS image-rendering:pixelated keeps the scaled-up sprites crisp
 function fitCanvasToWindow() {
     let canvasEl = document.querySelector('canvas')
-    if (canvasEl == null) return
+    let containerEl = document.getElementById('board-container')
+    if (canvasEl == null || containerEl == null) return
 
-    let btnWrapper = document.querySelector('.btn').parentElement
-    let reservedHeight = btnWrapper.getBoundingClientRect().height
-    let margin = 20 //keeps clear of the canvas's box-shadow and viewport edges
+    let rect = containerEl.getBoundingClientRect()
+    let margin = 20 //keeps clear of the canvas's box-shadow and the container's edges
 
-    let maxSize = Math.max(0, Math.min(windowWidth, windowHeight - reservedHeight - margin))
+    let maxSize = Math.max(0, Math.min(rect.width, rect.height) - margin)
 
     canvasEl.style.width = maxSize + 'px'
     canvasEl.style.height = maxSize + 'px'
+}
+
+function updateTurnText() {
+    let el = document.getElementById('turnText')
+    if (el == null) return
+    el.textContent = (turn == colors.WHITE ? "White's turn" : "Black's turn")
 }
 
 
@@ -221,6 +225,7 @@ function nextTurn() {
     } else {
         turn = colors.WHITE
     }
+    updateTurnText()
 }
 
 function capture(piece) {
@@ -883,11 +888,11 @@ class Vec2 {
 let themes = ["oak", "almond"] //has to have 2 only
 function toggleTheme() {
     let canvas = document.querySelector("canvas")
-    let btns = document.querySelector(".btn")
+    let panel = document.querySelector(".panel")
 
     canvas.classList.toggle("oak")
     canvas.classList.toggle("almond")
 
-    btns.classList.toggle("oak")
-    btns.classList.toggle("almond")
+    panel.classList.toggle("oak")
+    panel.classList.toggle("almond")
 }
