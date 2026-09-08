@@ -312,6 +312,8 @@ function draw() {
         }
     }
 
+    renderCheckHighlight()
+
     //rendering pieces
     for (let j = 0; j < 8; j++) {
         for (let i = 0; i < 8; i++) {
@@ -330,6 +332,17 @@ function draw() {
     renderPromotionPicker()
     renderGameOverMessage()
 
+}
+
+function renderCheckHighlight() {
+    for (let col of [colors.WHITE, colors.BLACK]) {
+        if (!isKingInCheck(col)) continue
+        let kingPos = findKingPos(col)
+        if (kingPos == null) continue
+        noStroke()
+        fill(255, 0, 0, 150)
+        rect((kingPos.i * w) + offset, (kingPos.j * w) + offset, w, w)
+    }
 }
 
 function renderGameOverMessage() {
