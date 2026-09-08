@@ -1,12 +1,23 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   background: #666;
-  text-align: center;
   font-family: monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 canvas {
   box-shadow: 10px 10px #222;
-  margin-top: 5vh;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }
 
 
@@ -28,6 +39,7 @@ canvas {
   border: none;
   box-shadow: 3px 3px #222;
   height: 25px;
+  margin-bottom: 10px;
 }
 
 .btn:hover {

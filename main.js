@@ -57,6 +57,29 @@ function setup() {
             putPieceByNum(new Vec2(i, j), num)
         }
     }
+
+    fitCanvasToWindow()
+}
+
+function windowResized() {
+    fitCanvasToWindow()
+}
+
+//scales the canvas's on-screen size to the largest square that fits the
+//viewport without overflowing either dimension; the actual render resolution
+//stays fixed and CSS image-rendering:pixelated keeps the scaled-up sprites crisp
+function fitCanvasToWindow() {
+    let canvasEl = document.querySelector('canvas')
+    if (canvasEl == null) return
+
+    let btnWrapper = document.querySelector('.btn').parentElement
+    let reservedHeight = btnWrapper.getBoundingClientRect().height
+    let margin = 20 //keeps clear of the canvas's box-shadow and viewport edges
+
+    let maxSize = Math.max(0, Math.min(windowWidth, windowHeight - reservedHeight - margin))
+
+    canvasEl.style.width = maxSize + 'px'
+    canvasEl.style.height = maxSize + 'px'
 }
 
 
