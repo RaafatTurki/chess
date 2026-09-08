@@ -21,6 +21,7 @@ let grid = [
 ]
 let captured = []
 let pendingPromotion = null //{ pos: Vec2, color } set while waiting for the player to pick a promotion piece
+let gameOver = null //{ checkmate: bool, loser: color } set once the side to move has no legal moves
 
 
 let board
@@ -149,6 +150,44 @@ function isThereEnemyPieceOn(thisColor, pos) {
 
 function isPosOutOfBounds(pos) {
     if (pos.i < 0 || pos.i > 7 || pos.j < 0 || pos.j > 7) return true; else return false
+}
+
+function findKingPos(color) {
+    for (let j = 0; j < 8; j++) {
+        for (let i = 0; i < 8; i++) {
+            let piece = grid[j][i].piece
+            if (piece != null && piece.color == color && piece.type == pieces.KING) return piece.pos
+        }
+    }
+    return null
+}
+
+function isSquareAttacked(pos, byColor) {
+    for (let j = 0; j < 8; j++) {
+        for (let i = 0; i < 8; i++) {
+            let piece = grid[j][i].piece
+            if (piece == null || piece.color != byColor) continue
+            if (piece.getAttackSquares().some(p => p.equals(pos))) return true
+        }
+    }
+    return false
+}
+
+function isKingInCheck(color) {
+    let kingPos = findKingPos(color)
+    if (kingPos == null) return false
+    let enemyColor = (color == colors.WHITE ? colors.BLACK : colors.WHITE)
+    return isSquareAttacked(kingPos, enemyColor)
+}
+
+function hasAnyLegalMoves(color) {
+    for (let j = 0; j < 8; j++) {
+        for (let i = 0; i < 8; i++) {
+            let piece = grid[j][i].piece
+            if (piece != null && piece.color == color && piece.available_positions.length > 0) return true
+        }
+    }
+    return false
 }
 
 
@@ -282,11 +321,37 @@ function draw() {
         }
     }
 
+    //once every piece's available_positions is fresh for this frame, check if the
+    //side to move has no legal moves left (checkmate or stalemate)
+    if (gameOver == null && pendingPromotion == null && !hasAnyLegalMoves(turn)) {
+        gameOver = { checkmate: isKingInCheck(turn), loser: turn }
+    }
+
     renderPromotionPicker()
+    renderGameOverMessage()
 
 }
 
+function renderGameOverMessage() {
+    if (gameOver == null) return
+
+    let text_ = gameOver.checkmate
+        ? (gameOver.loser == colors.WHITE ? "Black wins by checkmate" : "White wins by checkmate")
+        : "Stalemate - draw"
+
+    noStroke()
+    fill(0, 0, 0, 180)
+    rect(0, 0, board_w, board_w)
+
+    fill(255)
+    textAlign(CENTER, CENTER)
+    textSize(16 * scaler)
+    text(text_, board_w / 2, board_w / 2)
+}
+
 function mousePressed() {
+
+    if (gameOver != null) return
 
     if (pendingPromotion != null) {
         handlePromotionClick()
@@ -443,6 +508,41 @@ class Piece {
         this.available_positions = arr
     }
 
+    //a move that leaves your own king in check is illegal, even if otherwise legal
+    filterOutMovesThatExposeOwnKing() {
+        let arr = []
+        for (let i = 0; i < this.available_positions.length; i++) {
+            let pos = this.available_positions[i]
+            let originalPos = this.pos
+            let capturedPiece = getPiece(pos)
+
+            //simulate the move
+            delPiece(originalPos)
+            putPieceByObj(pos, this)
+            this.pos = pos
+
+            if (!isKingInCheck(this.color)) arr.push(pos)
+
+            //revert
+            this.pos = originalPos
+            putPieceByObj(originalPos, this)
+            if (capturedPiece != null) putPieceByObj(pos, capturedPiece); else delPiece(pos)
+        }
+        this.available_positions = arr
+    }
+
+    clampToBoard(arr) {
+        return arr.filter(pos => !isPosOutOfBounds(pos))
+    }
+
+    getSlidingAttackSquares(directions) {
+        let arr = []
+        for (let i = 0; i < directions.length; i++) {
+            arr.push(...this.rayCastToDir(directions[i]))
+        }
+        return arr
+    }
+
 }
 
 
@@ -494,10 +594,18 @@ class Pawn extends Piece {
         this.available_positions = arr
     }
 
+    getAttackSquares() {
+        return this.clampToBoard([
+            this.pos.add(new Vec2(-1, -1 * this.color)),
+            this.pos.add(new Vec2( 1, -1 * this.color))
+        ])
+    }
+
     calculateAllAvailablePositions() {
         this.calculateUnfilteredAvailablePositions()
         this.filterOutOfBoundsPositions()
         this.filterOutSameColorPositions()
+        this.filterOutMovesThatExposeOwnKing()
     }
 }
 
@@ -507,20 +615,20 @@ class Rook extends Piece {
     constructor(pos, col) {
         super(pos, col, [w_rook, b_rook])
         this.type = pieces.ROOK
+        this.directions = [new Vec2(-1, 0), new Vec2(1, 0), new Vec2(0, -1), new Vec2(0, 1)]
     }
 
     calculateUnfilteredAvailablePositions() {
-        this.available_positions = [
-            ...this.rayCastToDir(new Vec2(-1, 0)),
-            ...this.rayCastToDir(new Vec2( 1, 0)),
-            ...this.rayCastToDir(new Vec2( 0,-1)),
-            ...this.rayCastToDir(new Vec2( 0, 1))
-        ]
+        this.available_positions = this.getSlidingAttackSquares(this.directions)
+    }
+    getAttackSquares() {
+        return this.getSlidingAttackSquares(this.directions)
     }
     calculateAllAvailablePositions() {
         this.calculateUnfilteredAvailablePositions()
         this.filterOutOfBoundsPositions()
         this.filterOutSameColorPositions()
+        this.filterOutMovesThatExposeOwnKing()
     }
 }
 
@@ -552,10 +660,25 @@ class Knight extends Piece {
         this.available_positions = arr
     }
 
+    getAttackSquares() {
+        let possible_knight_moves = [
+            new Vec2( 2,  1),
+            new Vec2( 2, -1),
+            new Vec2(-2,  1),
+            new Vec2(-2, -1),
+            new Vec2( 1,  2),
+            new Vec2(-1,  2),
+            new Vec2( 1, -2),
+            new Vec2(-1, -2),
+        ]
+        return this.clampToBoard(possible_knight_moves.map(v => this.pos.add(v)))
+    }
+
     calculateAllAvailablePositions() {
         this.calculateUnfilteredAvailablePositions()
         this.filterOutOfBoundsPositions()
         this.filterOutSameColorPositions()
+        this.filterOutMovesThatExposeOwnKing()
     }
 
 }
@@ -566,20 +689,20 @@ class Bishop extends Piece {
     constructor(pos, col) {
         super(pos, col, [w_bishop, b_bishop])
         this.type = pieces.BISHOP
+        this.directions = [new Vec2(-1, -1), new Vec2(1, 1), new Vec2(-1, 1), new Vec2(1, -1)]
     }
 
     calculateUnfilteredAvailablePositions() {
-        this.available_positions = [
-            ...this.rayCastToDir(new Vec2(-1,-1)),
-            ...this.rayCastToDir(new Vec2( 1, 1)),
-            ...this.rayCastToDir(new Vec2(-1, 1)),
-            ...this.rayCastToDir(new Vec2( 1,-1))
-        ]
+        this.available_positions = this.getSlidingAttackSquares(this.directions)
+    }
+    getAttackSquares() {
+        return this.getSlidingAttackSquares(this.directions)
     }
     calculateAllAvailablePositions() {
         this.calculateUnfilteredAvailablePositions()
         this.filterOutOfBoundsPositions()
         this.filterOutSameColorPositions()
+        this.filterOutMovesThatExposeOwnKing()
     }
 }
 
@@ -589,24 +712,23 @@ class Queen extends Piece {
     constructor(pos, col) {
         super(pos, col, [w_queen, b_queen])
         this.type = pieces.QUEEN
+        this.directions = [
+            new Vec2(-1, -1), new Vec2(1, 1), new Vec2(-1, 1), new Vec2(1, -1),
+            new Vec2(-1, 0), new Vec2(1, 0), new Vec2(0, -1), new Vec2(0, 1)
+        ]
     }
 
     calculateUnfilteredAvailablePositions() {
-        this.available_positions = [
-            ...this.rayCastToDir(new Vec2(-1,-1)),
-            ...this.rayCastToDir(new Vec2( 1, 1)),
-            ...this.rayCastToDir(new Vec2(-1, 1)),
-            ...this.rayCastToDir(new Vec2( 1,-1)),
-            ...this.rayCastToDir(new Vec2(-1, 0)),
-            ...this.rayCastToDir(new Vec2( 1, 0)),
-            ...this.rayCastToDir(new Vec2( 0,-1)),
-            ...this.rayCastToDir(new Vec2( 0, 1))
-        ]
+        this.available_positions = this.getSlidingAttackSquares(this.directions)
+    }
+    getAttackSquares() {
+        return this.getSlidingAttackSquares(this.directions)
     }
     calculateAllAvailablePositions() {
         this.calculateUnfilteredAvailablePositions()
         this.filterOutOfBoundsPositions()
         this.filterOutSameColorPositions()
+        this.filterOutMovesThatExposeOwnKing()
     }
 }
 
@@ -638,11 +760,25 @@ class King extends Piece {
         this.available_positions = arr
     }
 
+    getAttackSquares() {
+        let possible_king_moves = [
+            new Vec2( 1,  0),
+            new Vec2(-1,  0),
+            new Vec2( 0,  1),
+            new Vec2( 0, -1),
+            new Vec2( 1,  1),
+            new Vec2( 1, -1),
+            new Vec2(-1,  1),
+            new Vec2(-1, -1)
+        ]
+        return this.clampToBoard(possible_king_moves.map(v => this.pos.add(v)))
+    }
+
     calculateAllAvailablePositions() {
         this.calculateUnfilteredAvailablePositions()
         this.filterOutOfBoundsPositions()
         this.filterOutSameColorPositions()
-        //this.filterOutDangerPositions
+        this.filterOutMovesThatExposeOwnKing()
     }
 }
 
