@@ -241,6 +241,16 @@ function clearAllEnPassantVulnerability() {
 function doAction(square) {
     let movingPiece = selectedSquare.piece
 
+    //castling: king moves two squares, so the corresponding rook jumps alongside it
+    if (movingPiece.type == pieces.KING && Math.abs(square.pos.i - movingPiece.pos.i) == 2) {
+        let row = movingPiece.pos.j
+        let isKingside = square.pos.i > movingPiece.pos.i
+        let rookFromI = isKingside ? 7 : 0
+        let rookToI = isKingside ? 5 : 3
+        movePiece(new Vec2(rookFromI, row), new Vec2(rookToI, row))
+        getPiece(new Vec2(rookToI, row)).isUntouched = false
+    }
+
     //en passant capture: pawn moving diagonally into an empty square means
     //the captured pawn is beside the destination, not on it
     if (movingPiece.type == pieces.PAWN && square.piece == null && square.pos.i != movingPiece.pos.i) {
@@ -793,7 +803,37 @@ class King extends Piece {
             arr.push(this.pos.add(possible_king_moves[i]))
         }
 
+        arr.push(...this.getCastlingMoves())
+
         this.available_positions = arr
+    }
+
+    //castling requires: king and rook both untouched, empty squares between them,
+    //and the king isn't in check, doesn't pass through, and doesn't land on an attacked square
+    getCastlingMoves() {
+        let arr = []
+        if (!this.isUntouched) return arr
+
+        let enemyColor = (this.color == colors.WHITE ? colors.BLACK : colors.WHITE)
+        if (isKingInCheck(this.color)) return arr
+
+        let row = this.pos.j
+
+        let kingsideRook = getPiece(new Vec2(7, row))
+        if (kingsideRook != null && kingsideRook.type == pieces.ROOK && kingsideRook.color == this.color && kingsideRook.isUntouched) {
+            let pathClear = !isTherePieceOn(new Vec2(5, row)) && !isTherePieceOn(new Vec2(6, row))
+            let pathSafe = !isSquareAttacked(new Vec2(5, row), enemyColor) && !isSquareAttacked(new Vec2(6, row), enemyColor)
+            if (pathClear && pathSafe) arr.push(new Vec2(6, row))
+        }
+
+        let queensideRook = getPiece(new Vec2(0, row))
+        if (queensideRook != null && queensideRook.type == pieces.ROOK && queensideRook.color == this.color && queensideRook.isUntouched) {
+            let pathClear = !isTherePieceOn(new Vec2(1, row)) && !isTherePieceOn(new Vec2(2, row)) && !isTherePieceOn(new Vec2(3, row))
+            let pathSafe = !isSquareAttacked(new Vec2(2, row), enemyColor) && !isSquareAttacked(new Vec2(3, row), enemyColor)
+            if (pathClear && pathSafe) arr.push(new Vec2(2, row))
+        }
+
+        return arr
     }
 
     getAttackSquares() {
