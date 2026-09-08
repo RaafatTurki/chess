@@ -1,0 +1,39 @@
+body {
+  background: #666;
+  text-align: center;
+  font-family: monospace;
+}
+
+canvas {
+  box-shadow: 10px 10px #222;
+  margin-top: 5vh;
+}
+
+
+/* Themes */
+.almond {
+  filter: sepia(0)
+}
+
+.oak {
+  filter: sepia(0.5)
+}
+
+
+
+/* Btn */
+.btn {
+  background: #333;
+  color: #e0e0e0;
+  border: none;
+  box-shadow: 3px 3px #222;
+  height: 25px;
+}
+
+.btn:hover {
+  text-decoration: underline;
+}
+
+.btn:active {
+  box-shadow: 1px 1px #222;
+}
