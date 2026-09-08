@@ -20,6 +20,7 @@ let grid = [
     [ 2,  3,  4,  5,  6,  4,  3,  2]
 ]
 let captured = []
+let pendingPromotion = null //{ pos: Vec2, color } set while waiting for the player to pick a promotion piece
 
 
 let board
@@ -203,10 +204,61 @@ function doAction(square) {
         }
     }
 
+    //pawn promotion: pause for the player to pick a piece
     if (square.piece.type == pieces.PAWN && (square.pos.j == 0 || square.pos.j == 7)) {
-        putPieceByObj(square.pos, new Queen(square.pos, square.piece.color))
+        pendingPromotion = { pos: square.pos, color: square.piece.color }
     }
 
+}
+
+function getPromotionChoices(color) {
+    return [
+        { ctor: Queen, img: color == colors.WHITE ? w_queen : b_queen },
+        { ctor: Rook, img: color == colors.WHITE ? w_rook : b_rook },
+        { ctor: Bishop, img: color == colors.WHITE ? w_bishop : b_bishop },
+        { ctor: Knight, img: color == colors.WHITE ? w_knight : b_knight },
+    ]
+}
+
+function getPromotionPickerLayout() {
+    let choices = getPromotionChoices(pendingPromotion.color)
+    let x0 = (board_w - choices.length * w) / 2
+    let y0 = (board_w - w) / 2
+    return { choices, x0, y0 }
+}
+
+function renderPromotionPicker() {
+    if (pendingPromotion == null) return
+
+    let { choices, x0, y0 } = getPromotionPickerLayout()
+
+    noStroke()
+    fill(0, 0, 0, 180)
+    rect(0, 0, board_w, board_w)
+
+    for (let i = 0; i < choices.length; i++) {
+        let x = x0 + (i * w)
+        stroke(0)
+        strokeWeight(2)
+        fill(230)
+        rect(x, y0, w, w)
+        image(choices[i].img, x, y0)
+    }
+}
+
+function handlePromotionClick() {
+    let { choices, x0, y0 } = getPromotionPickerLayout()
+
+    for (let i = 0; i < choices.length; i++) {
+        let x = x0 + (i * w)
+        if (mouseX > x && mouseX < x + w && mouseY > y0 && mouseY < y0 + w) {
+            let piece = new choices[i].ctor(pendingPromotion.pos, pendingPromotion.color)
+            piece.isUntouched = false
+            putPieceByObj(pendingPromotion.pos, piece)
+            pendingPromotion = null
+            return
+        }
+    }
 }
 
 
@@ -230,9 +282,16 @@ function draw() {
         }
     }
 
+    renderPromotionPicker()
+
 }
 
 function mousePressed() {
+
+    if (pendingPromotion != null) {
+        handlePromotionClick()
+        return
+    }
 
     for (let j = 0; j < grid.length; j++) {
         for (let i = 0; i < grid[j].length; i++) {
