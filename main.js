@@ -22,16 +22,20 @@ let grid = [
 let captured = []
 
 
+let board
+let b_king, b_queen, b_bishop, b_knight, b_rook, b_pawn
+let w_king, w_queen, w_bishop, w_knight, w_rook, w_pawn
+
 function preload() {
     board = loadImage('assets/board.png')
-  
+
     b_king = loadImage('assets/b_king.png')
     b_queen = loadImage('assets/b_queen.png')
     b_bishop = loadImage('assets/b_bishop.png')
     b_knight = loadImage('assets/b_knight.png')
     b_rook = loadImage('assets/b_rook.png')
     b_pawn = loadImage('assets/b_pawn.png')
-  
+
     w_king = loadImage('assets/w_king.png')
     w_queen = loadImage('assets/w_queen.png')
     w_bishop = loadImage('assets/w_bishop.png')
