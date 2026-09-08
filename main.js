@@ -263,7 +263,7 @@ class Square {
             deselectSelectedSquare()
             nextTurn()
         //Selecting
-        } else /*if (this.piece != null && this.piece.color == turn)*/ { //uncomment to get out of free play
+        } else if (this.piece != null && this.piece.color == turn) {
             deselectSelectedSquare()
             selectSquare(this)
         }
