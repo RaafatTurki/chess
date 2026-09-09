@@ -83,7 +83,12 @@ function fitCanvasToWindow() {
 function updateTurnText() {
     let el = document.getElementById('turnText')
     if (el == null) return
-    el.textContent = (turn == colors.WHITE ? "White's turn" : "Black's turn")
+
+    if (gameOver != null) {
+      el.textContent = gameOver.checkmate ? (gameOver.loser == colors.WHITE ? "Black wins" : "White wins") : "Stalemate"
+    } else {
+      el.textContent = (turn == colors.WHITE ? "Whites turn" : "Blacks turn")
+    }
 }
 
 
@@ -365,6 +370,7 @@ function draw() {
     //side to move has no legal moves left (checkmate or stalemate)
     if (gameOver == null && pendingPromotion == null && !hasAnyLegalMoves(turn)) {
         gameOver = { checkmate: isKingInCheck(turn), loser: turn }
+        updateTurnText()
     }
 
     renderPromotionPicker()
@@ -386,9 +392,7 @@ function renderCheckHighlight() {
 function renderGameOverMessage() {
     if (gameOver == null) return
 
-    let text_ = gameOver.checkmate
-        ? (gameOver.loser == colors.WHITE ? "Black wins by checkmate" : "White wins by checkmate")
-        : "Stalemate - draw"
+    let text_ = gameOver.checkmate ? (gameOver.loser == colors.WHITE ? "Black wins" : "White wins") : "Stalemate"
 
     noStroke()
     fill(0, 0, 0, 180)
