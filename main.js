@@ -49,7 +49,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(board_w, board_w).parent('board-container')
+  createCanvas(board_w, board_w).parent('board-canvas-slot')
   w_tile.resizeNN(w, w)
   b_tile.resizeNN(w, w)
 
@@ -86,21 +86,20 @@ function windowResized() {
 function fitCanvasToWindow() {
   let canvasEl = document.querySelector('canvas')
   let containerEl = document.getElementById('board-container')
+  let ranksEl = document.getElementById('ranksCol')
+  let filesEl = document.getElementById('filesRow')
   if (canvasEl == null || containerEl == null) return
 
   let rect = containerEl.getBoundingClientRect()
   let margin = 20 //keeps clear of the canvas's box-shadow and the container's edges
 
-  let maxSize = Math.max(0, Math.min(rect.width, rect.height) - margin)
+  let gutterW = ranksEl != null ? ranksEl.getBoundingClientRect().width : 0
+  let gutterH = filesEl != null ? filesEl.getBoundingClientRect().height : 0
+
+  let maxSize = Math.max(0, Math.min(rect.width - gutterW, rect.height - gutterH) - margin)
 
   canvasEl.style.width = maxSize + 'px'
   canvasEl.style.height = maxSize + 'px'
-
-  let overlayEl = document.getElementById('gameOverOverlay')
-  if (overlayEl != null) {
-    overlayEl.style.width = maxSize + 'px'
-    overlayEl.style.height = maxSize + 'px'
-  }
 }
 
 function updateTurnText() {
