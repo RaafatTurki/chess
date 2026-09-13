@@ -8,15 +8,18 @@
   <body>
     <script src="p5.js"></script>
     <div class="app">
+      <nav class="navbar">
+        <button class="btn" type="button" onclick="toggleTheme()">Change Theme</button>
+        <div id="turnText" class="turn-text">White's turn</div>
+      </nav>
       <div id="board-container">
         <div id="gameOverOverlay" class="game-over-overlay" hidden>
-          <div id="gameOverText" class="game-over-card"></div>
+          <div class="game-over-card">
+            <div id="gameOverText"></div>
+            <button class="btn" type="button" onclick="resetGame()">Rematch</button>
+          </div>
         </div>
       </div>
-      <aside class="panel">
-        <div id="turnText" class="turn-text">White's turn</div>
-        <button class="btn" type="button" onclick="toggleTheme()">Change Theme</button>
-      </aside>
     </div>
     <script src="main.js"></script>
   </body>

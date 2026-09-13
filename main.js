@@ -7,9 +7,7 @@ let colors = { WHITE: 1, BLACK: -1 }
 let pieces = { PAWN: 1, ROOK: 2, KNIGHT: 3, BISHOP: 4, QUEEN: 5, KING: 6 }  //unused yet
 
 //globals
-let turn = colors.WHITE
-let selectedSquare = null
-let grid = [
+let initialLayout = [
   [-2, -3, -4, -5, -6, -4, -3, -2],
   [-1, -1, -1, -1, -1, -1, -1, -1],
   [0, 0, 0, 0, 0, 0, 0, 0],
@@ -19,6 +17,9 @@ let grid = [
   [1, 1, 1, 1, 1, 1, 1, 1],
   [2, 3, 4, 5, 6, 4, 3, 2]
 ]
+let turn = colors.WHITE
+let selectedSquare = null
+let grid = []
 let captured = []
 let pendingPromotion = null //{ pos: Vec2, color } set while waiting for the player to pick a promotion piece
 let gameOver = null //{ checkmate: bool, loser: color } set once the side to move has no legal moves
@@ -52,15 +53,29 @@ function setup() {
   w_tile.resizeNN(w, w)
   b_tile.resizeNN(w, w)
 
+  initGrid()
+  fitCanvasToWindow()
+  updateTurnText()
+}
+
+function initGrid() {
   for (let j = 0; j < 8; j++) {
+    grid[j] = []
     for (let i = 0; i < 8; i++) {
-      let num = grid[j][i]
       grid[j][i] = new Square(i, j, null)
-      putPieceByNum(new Vec2(i, j), num)
+      putPieceByNum(new Vec2(i, j), initialLayout[j][i])
     }
   }
+}
 
-  fitCanvasToWindow()
+function resetGame() {
+  turn = colors.WHITE
+  deselectSelectedSquare()
+  captured = []
+  pendingPromotion = null
+  gameOver = null
+
+  initGrid()
   updateTurnText()
 }
 
@@ -899,11 +914,11 @@ class Vec2 {
 let themes = ["oak", "almond"] //has to have 2 only
 function toggleTheme() {
   let canvas = document.querySelector("canvas")
-  let panel = document.querySelector(".panel")
+  let navbar = document.querySelector(".navbar")
 
   canvas.classList.toggle("oak")
   canvas.classList.toggle("almond")
 
-  panel.classList.toggle("oak")
-  panel.classList.toggle("almond")
+  navbar.classList.toggle("oak")
+  navbar.classList.toggle("almond")
 }
