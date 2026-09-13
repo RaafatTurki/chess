@@ -80,16 +80,27 @@ function fitCanvasToWindow() {
 
   canvasEl.style.width = maxSize + 'px'
   canvasEl.style.height = maxSize + 'px'
+
+  let overlayEl = document.getElementById('gameOverOverlay')
+  if (overlayEl != null) {
+    overlayEl.style.width = maxSize + 'px'
+    overlayEl.style.height = maxSize + 'px'
+  }
 }
 
 function updateTurnText() {
   let el = document.getElementById('turnText')
-  if (el == null) return
+  let overlayEl = document.getElementById('gameOverOverlay')
+  let overlayTextEl = document.getElementById('gameOverText')
 
   if (gameOver != null) {
-    el.textContent = gameOver.checkmate ? (gameOver.loser == colors.WHITE ? "Black wins" : "White wins") : "Stalemate"
+    let text_ = gameOver.checkmate ? (gameOver.loser == colors.WHITE ? "Black wins" : "White wins") : "Stalemate"
+    if (el != null) el.textContent = text_
+    if (overlayTextEl != null) overlayTextEl.textContent = text_
+    if (overlayEl != null) overlayEl.hidden = false
   } else {
-    el.textContent = (turn == colors.WHITE ? "Whites turn" : "Blacks turn")
+    if (el != null) el.textContent = (turn == colors.WHITE ? "Whites turn" : "Blacks turn")
+    if (overlayEl != null) overlayEl.hidden = true
   }
 }
 
@@ -377,7 +388,6 @@ function draw() {
   }
 
   renderPromotionPicker()
-  renderGameOverMessage()
 
 }
 
@@ -399,21 +409,6 @@ function renderCheckHighlight() {
     fill(255, 0, 0, 150)
     rect((kingPos.i * w) + offset, (kingPos.j * w) + offset, w, w)
   }
-}
-
-function renderGameOverMessage() {
-  if (gameOver == null) return
-
-  let text_ = gameOver.checkmate ? (gameOver.loser == colors.WHITE ? "Black wins" : "White wins") : "Stalemate"
-
-  noStroke()
-  fill(0, 0, 0, 180)
-  rect(0, 0, board_w, board_w)
-
-  fill(255)
-  textAlign(CENTER, CENTER)
-  textSize(16 * scaler)
-  text(text_, board_w / 2, board_w / 2)
 }
 
 function mousePressed() {

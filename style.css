@@ -15,6 +15,7 @@ body {
 }
 
 #board-container {
+  position: relative;
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -27,6 +28,35 @@ canvas {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+}
+
+.game-over-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.game-over-overlay[hidden] {
+  display: none;
+}
+
+.game-over-card {
+  background: #333;
+  color: #e0e0e0;
+  box-shadow: 6px 6px #111;
+  padding: 20px 40px;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 1.6em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: center;
 }
 
 

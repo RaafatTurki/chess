@@ -8,7 +8,11 @@
   <body>
     <script src="p5.js"></script>
     <div class="app">
-      <div id="board-container"></div>
+      <div id="board-container">
+        <div id="gameOverOverlay" class="game-over-overlay" hidden>
+          <div id="gameOverText" class="game-over-card"></div>
+        </div>
+      </div>
       <aside class="panel">
         <div id="turnText" class="turn-text">White's turn</div>
         <button class="btn" type="button" onclick="toggleTheme()">Change Theme</button>
