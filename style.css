@@ -24,7 +24,6 @@ body {
 }
 
 canvas {
-  box-shadow: 10px 10px #222;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
