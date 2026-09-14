@@ -3,6 +3,6 @@
 set -euo pipefail
 
 
-git reset --hard && git fetch && git rebase
+git fetch && git reset --hard @{u}
 
-docker compose up -d --build --force-recreate
+docker compose up -d --build
