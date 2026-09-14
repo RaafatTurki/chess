@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -euo pipefail
+
+
+git reset --hard && git fetch && git rebase
+
+docker compose up -d --build --force-recreate
