@@ -3,6 +3,7 @@ import { isEnPassantCapture } from '../chess/moves.ts'
 import type { Color, PieceType, Square } from '../chess/types.ts'
 import { sameSquare, squareKey } from '../chess/types.ts'
 import { pieceImageSrc } from './piece-images.ts'
+import { sounds } from './sounds.ts'
 
 const PROMO_CHOICES: PieceType[] = ['queen', 'rook', 'bishop', 'knight']
 const SQUARE_PERCENT = 100 / 8
@@ -204,9 +205,18 @@ export class BoardView {
     this.deselect()
     this.render()
     this.onChange()
+    if (this.game.result != null) sounds.gameover()
+  }
+
+  private playMoveSound(from: Square, to: Square): void {
+    const piece = this.game.board.get(from)
+    const isCapture = piece != null && (this.game.board.get(to) != null || isEnPassantCapture(this.game.board, piece, from, to))
+    if (isCapture) sounds.capture()
+    else sounds.move()
   }
 
   playEngineMove(from: Square, to: Square, promotion?: PieceType): void {
+    this.playMoveSound(from, to)
     this.game.makeMove(from, to, promotion)
     this.afterMove()
   }
@@ -215,6 +225,7 @@ export class BoardView {
     if (this.inputLocked) return
 
     if (this.selectedSquare != null && this.isLegalTarget(square)) {
+      this.playMoveSound(this.selectedSquare, square)
       this.game.makeMove(this.selectedSquare, square)
       this.afterMove()
       return
@@ -304,6 +315,7 @@ export class BoardView {
 
     const target = this.squareAtPoint(ev.clientX, ev.clientY)
     if (target != null && this.isLegalTarget(target)) {
+      this.playMoveSound(from, target)
       this.game.makeMove(from, target)
       this.afterMove()
     } else {
