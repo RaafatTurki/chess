@@ -1,0 +1,13 @@
+services:
+  chessy:
+    image: chessy:latest
+    container_name: chessy
+    build: .
+    ports:
+      - '8080:80'
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
