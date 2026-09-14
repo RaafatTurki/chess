@@ -26,7 +26,7 @@ const botToggleBtn = el<HTMLButtonElement>('botToggleBtn')
 const boardView = new BoardView(boardFrame, game, updateStatus)
 const historyPanel = new HistoryPanel(game, moveListEl, exportPgnBtn, exportFenBtn)
 
-let botEnabled = false
+let botEnabled = true
 
 function updateStatus() {
   const botThinking = botEnabled && game.result == null && game.turn === BOT_COLOR
@@ -69,4 +69,6 @@ el('rematchBtn').addEventListener('click', newGame)
 el('newGameBtn').addEventListener('click', newGame)
 botToggleBtn.addEventListener('click', toggleBot)
 
+botToggleBtn.classList.toggle('btn-primary', botEnabled)
+botToggleBtn.textContent = botEnabled ? 'Bot: On' : 'Bot: Off'
 updateStatus()
