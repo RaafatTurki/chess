@@ -36,6 +36,10 @@ export function algebraic(s: Square): string {
   return `${fileLetter(s.file)}${8 - s.rank}`
 }
 
+export function fromAlgebraic(s: string): Square {
+  return { file: s.charCodeAt(0) - 97, rank: 8 - Number(s[1]) }
+}
+
 export function sanLetter(type: PieceType): string {
   return SAN_LETTER[type]
 }

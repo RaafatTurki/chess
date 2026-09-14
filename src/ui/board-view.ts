@@ -23,6 +23,8 @@ export class BoardView {
   private promoEl: HTMLElement
   private promoButtons: HTMLButtonElement[] = []
 
+  externalLock = false
+
   private selectedSquare: Square | null = null
   private legalMoves: Square[] = []
   private dragPieceId: number | null = null
@@ -186,7 +188,7 @@ export class BoardView {
   }
 
   private get inputLocked(): boolean {
-    return this.game.result != null || this.game.pendingPromotion != null
+    return this.game.result != null || this.game.pendingPromotion != null || this.externalLock
   }
 
   private isLegalTarget(square: Square): boolean {
@@ -202,6 +204,11 @@ export class BoardView {
     this.deselect()
     this.render()
     this.onChange()
+  }
+
+  playEngineMove(from: Square, to: Square, promotion?: PieceType): void {
+    this.game.makeMove(from, to, promotion)
+    this.afterMove()
   }
 
   private tryMoveOrSelect(square: Square): void {
