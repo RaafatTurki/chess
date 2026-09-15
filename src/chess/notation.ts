@@ -139,7 +139,7 @@ export function toPGN(game: Game) {
 
   const headers = [
     '[Event "Casual Game"]',
-    '[Site "Chessy"]',
+    '[Site "Chess"]',
     `[Date "${date}"]`,
     '[Round "1"]',
     '[White "White"]',

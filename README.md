@@ -1,4 +1,4 @@
-# chessy
+# chess
 
 A chess web app with an optional Stockfish bot opponent, built with Bun, TypeScript, and Vite.
 
