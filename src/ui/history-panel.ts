@@ -3,7 +3,7 @@ import { toFEN, toPGN } from '../chess/notation.ts'
 
 const FLASH_MS = 1200
 
-function span(className: string, text: string): HTMLSpanElement {
+function span(className: string, text: string) {
   const el = document.createElement('span')
   el.className = className
   el.textContent = text
@@ -26,7 +26,7 @@ export class HistoryPanel {
     this.fenBtn.addEventListener('click', () => this.copy(toFEN(this.game), this.fenBtn))
   }
 
-  render(): void {
+  render() {
     this.listEl.innerHTML = ''
     const { history } = this.game
 
@@ -44,7 +44,7 @@ export class HistoryPanel {
     this.listEl.scrollTop = this.listEl.scrollHeight
   }
 
-  private async copy(text: string, btn: HTMLButtonElement): Promise<void> {
+  private async copy(text: string, btn: HTMLButtonElement) {
     try {
       await navigator.clipboard.writeText(text)
       this.flash(btn, 'Copied')
@@ -53,7 +53,7 @@ export class HistoryPanel {
     }
   }
 
-  private flash(btn: HTMLButtonElement, message: string): void {
+  private flash(btn: HTMLButtonElement, message: string) {
     const original = btn.textContent
     btn.textContent = message
     btn.disabled = true

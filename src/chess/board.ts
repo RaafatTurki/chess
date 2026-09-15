@@ -10,11 +10,11 @@ export class Board {
     this.squares = squares ?? Board.emptyGrid()
   }
 
-  private static emptyGrid(): (Piece | null)[][] {
+  private static emptyGrid() {
     return Array.from({ length: 8 }, () => Array<Piece | null>(8).fill(null))
   }
 
-  static initial(): Board {
+  static initial() {
     const board = new Board()
     for (let file = 0; file < 8; file++) {
       board.set({ file, rank: 0 }, createPiece(BACK_RANK[file], 'black'))
@@ -25,16 +25,16 @@ export class Board {
     return board
   }
 
-  get(s: Square): Piece | null {
+  get(s: Square) {
     if (!isOnBoard(s)) return null
     return this.squares[s.rank][s.file]
   }
 
-  set(s: Square, piece: Piece | null): void {
+  set(s: Square, piece: Piece | null) {
     this.squares[s.rank][s.file] = piece
   }
 
-  clone(): Board {
+  clone() {
     return new Board(this.squares.map((row) => row.map((p) => (p ? { ...p } : null))))
   }
 
@@ -47,7 +47,7 @@ export class Board {
     }
   }
 
-  findKing(color: Color): Square | null {
+  findKing(color: Color) {
     for (const [square, piece] of this.pieces()) {
       if (piece.type === 'king' && piece.color === color) return square
     }

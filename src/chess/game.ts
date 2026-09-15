@@ -28,7 +28,7 @@ export class Game {
     this.reset()
   }
 
-  reset(): void {
+  reset() {
     this.board = Board.initial()
     this.turn = 'white'
     this.enPassantTarget = null
@@ -39,13 +39,13 @@ export class Game {
     this.pendingEntry = null
   }
 
-  isInCheck(color: Color): boolean {
+  isInCheck(color: Color) {
     const kingSquare = this.board.findKing(color)
     if (kingSquare == null) return false
     return isSquareAttacked(this.board, kingSquare, otherColor(color))
   }
 
-  legalMovesFrom(from: Square): Square[] {
+  legalMovesFrom(from: Square) {
     const piece = this.board.get(from)
     if (piece == null) return []
 
@@ -62,14 +62,14 @@ export class Game {
     })
   }
 
-  private hasAnyLegalMove(color: Color): boolean {
+  private hasAnyLegalMove(color: Color) {
     for (const [square, piece] of this.board.pieces()) {
       if (piece.color === color && this.legalMovesFrom(square).length > 0) return true
     }
     return false
   }
 
-  makeMove(from: Square, to: Square, promotion?: PieceType): void {
+  makeMove(from: Square, to: Square, promotion?: PieceType) {
     const piece = this.board.get(from)
     if (piece == null) return
 
@@ -105,7 +105,7 @@ export class Game {
     this.advanceTurn()
   }
 
-  resolvePromotion(type: PieceType): void {
+  resolvePromotion(type: PieceType) {
     if (this.pendingPromotion == null) return
     const { square, color } = this.pendingPromotion
     this.board.set(square, createPiece(type, color, true))
@@ -114,7 +114,7 @@ export class Game {
     this.advanceTurn()
   }
 
-  private performCastle(from: Square, to: Square): void {
+  private performCastle(from: Square, to: Square) {
     const side = CASTLING_SIDES.find((s) => s.kingTo === to.file)
     if (side == null) return
     const rank = from.rank
@@ -125,7 +125,7 @@ export class Game {
     this.board.set(sq(side.rookTo, rank), rook)
   }
 
-  private advanceTurn(): void {
+  private advanceTurn() {
     this.turn = otherColor(this.turn)
 
     if (!this.hasAnyLegalMove(this.turn)) {

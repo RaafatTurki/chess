@@ -9,6 +9,6 @@ const PIECE_LETTER: Record<PieceType, string> = {
   king: 'K',
 }
 
-export function pieceImageSrc(color: Color, type: PieceType): string {
+export function pieceImageSrc(color: Color, type: PieceType) {
   return `assets/piece/chess7/${color === 'white' ? 'w' : 'b'}${PIECE_LETTER[type]}.svg`
 }

@@ -14,7 +14,7 @@ export interface EngineMove {
   promotion?: PieceType
 }
 
-function parseUciMove(uci: string): EngineMove {
+function parseUciMove(uci: string) {
   const from = fromAlgebraic(uci.slice(0, 2))
   const to = fromAlgebraic(uci.slice(2, 4))
   const promotion = uci.length > 4 ? PROMOTION_LETTER[uci[4]] : undefined
@@ -37,7 +37,7 @@ export class StockfishEngine {
 
   private readyResolve!: () => void
 
-  private handleMessage(line: string): void {
+  private handleMessage(line: string) {
     if (line === 'uciok') {
       this.worker.postMessage('isready')
     } else if (line === 'readyok') {

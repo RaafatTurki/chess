@@ -59,13 +59,13 @@ export class BoardView {
     this.render()
   }
 
-  reset(): void {
+  reset() {
     this.deselect()
     this.dragPieceId = null
     this.render()
   }
 
-  render(): void {
+  render() {
     const board = this.game.board
 
     const checkedKingSquares = new Set<string>()
@@ -129,7 +129,7 @@ export class BoardView {
     }
   }
 
-  private buildSquare(file: number, rank: number): HTMLElement {
+  private buildSquare(file: number, rank: number) {
     const el = document.createElement('div')
     el.className = `square ${(file + rank) % 2 === 0 ? 'tile-light' : 'tile-dark'}`
     el.addEventListener('click', () => this.tryMoveOrSelect({ file, rank }))
@@ -137,7 +137,7 @@ export class BoardView {
     return el
   }
 
-  private buildPromoPicker(): { el: HTMLElement; buttons: HTMLButtonElement[] } {
+  private buildPromoPicker() {
     const el = document.createElement('div')
     el.className = 'overlay promo-picker'
     el.hidden = true
@@ -158,7 +158,7 @@ export class BoardView {
     return { el, buttons }
   }
 
-  private buildPieceEl(pieceId: number, square: Square): PieceEl {
+  private buildPieceEl(pieceId: number, square: Square) {
     const el = document.createElement('div')
     el.className = 'piece entering'
     el.addEventListener('animationend', () => el.classList.remove('entering'), { once: true })
@@ -175,12 +175,12 @@ export class BoardView {
     return entry
   }
 
-  private positionPiece(el: HTMLElement, square: Square): void {
+  private positionPiece(el: HTMLElement, square: Square) {
     el.style.left = `${square.file * SQUARE_PERCENT}%`
     el.style.top = `${square.rank * SQUARE_PERCENT}%`
   }
 
-  private squareAtPoint(clientX: number, clientY: number): Square | null {
+  private squareAtPoint(clientX: number, clientY: number) {
     const rect = this.rootEl.getBoundingClientRect()
     const file = Math.floor(((clientX - rect.left) / rect.width) * 8)
     const rank = Math.floor(((clientY - rect.top) / rect.height) * 8)
@@ -188,40 +188,40 @@ export class BoardView {
     return { file, rank }
   }
 
-  private get inputLocked(): boolean {
+  private get inputLocked() {
     return this.game.result != null || this.game.pendingPromotion != null || this.externalLock
   }
 
-  private isLegalTarget(square: Square): boolean {
+  private isLegalTarget(square: Square) {
     return this.legalMoves.some((m) => sameSquare(m, square))
   }
 
-  private deselect(): void {
+  private deselect() {
     this.selectedSquare = null
     this.legalMoves = []
   }
 
-  private afterMove(): void {
+  private afterMove() {
     this.deselect()
     this.render()
     this.onChange()
     if (this.game.result != null) sounds.gameover()
   }
 
-  private playMoveSound(from: Square, to: Square): void {
+  private playMoveSound(from: Square, to: Square) {
     const piece = this.game.board.get(from)
     const isCapture = piece != null && (this.game.board.get(to) != null || isEnPassantCapture(this.game.board, piece, from, to))
     if (isCapture) sounds.capture()
     else sounds.move()
   }
 
-  playEngineMove(from: Square, to: Square, promotion?: PieceType): void {
+  playEngineMove(from: Square, to: Square, promotion?: PieceType) {
     this.playMoveSound(from, to)
     this.game.makeMove(from, to, promotion)
     this.afterMove()
   }
 
-  private tryMoveOrSelect(square: Square): void {
+  private tryMoveOrSelect(square: Square) {
     if (this.inputLocked) return
 
     if (this.selectedSquare != null && this.isLegalTarget(square)) {
@@ -241,7 +241,7 @@ export class BoardView {
     this.render()
   }
 
-  private handlePointerDown(e: PointerEvent, pieceId: number): void {
+  private handlePointerDown(e: PointerEvent, pieceId: number) {
     if (this.inputLocked) return
     const from = this.pieceSquares.get(pieceId)
     if (from == null) return
@@ -276,7 +276,7 @@ export class BoardView {
     document.addEventListener('pointercancel', onUp)
   }
 
-  private beginDrag(pieceId: number, from: Square): void {
+  private beginDrag(pieceId: number, from: Square) {
     const entry = this.pieceEls.get(pieceId)
     if (entry == null) return
     this.dragPieceId = pieceId
@@ -287,7 +287,7 @@ export class BoardView {
     this.render()
   }
 
-  private updateDrag(ev: PointerEvent): void {
+  private updateDrag(ev: PointerEvent) {
     if (this.dragEntry == null) return
     const rect = this.rootEl.getBoundingClientRect()
     const half = SQUARE_PERCENT / 2
@@ -298,7 +298,7 @@ export class BoardView {
     this.updateDragHover(this.squareAtPoint(ev.clientX, ev.clientY))
   }
 
-  private updateDragHover(square: Square | null): void {
+  private updateDragHover(square: Square | null) {
     const el = square != null && this.isLegalTarget(square) ? this.squareEls[square.rank][square.file] : null
     if (el === this.dragHoverEl) return
     this.dragHoverEl?.classList.remove('drag-hover')
@@ -306,7 +306,7 @@ export class BoardView {
     this.dragHoverEl = el
   }
 
-  private endDrag(ev: PointerEvent): void {
+  private endDrag(ev: PointerEvent) {
     const from = this.selectedSquare!
     this.dragEntry?.el.classList.remove('dragging')
     this.dragPieceId = null

@@ -16,11 +16,11 @@ const ROOK_DIRECTIONS = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 const BISHOP_DIRECTIONS = [[1, 1], [1, -1], [-1, 1], [-1, -1]]
 const QUEEN_DIRECTIONS = [...ROOK_DIRECTIONS, ...BISHOP_DIRECTIONS]
 
-function offsetSquares(from: Square, offsets: number[][]): Square[] {
+function offsetSquares(from: Square, offsets: number[][]) {
   return offsets.map(([df, dr]) => sq(from.file + df, from.rank + dr)).filter(isOnBoard)
 }
 
-function slidingSquares(board: Board, from: Square, color: Color, directions: number[][]): Square[] {
+function slidingSquares(board: Board, from: Square, color: Color, directions: number[][]) {
   const result: Square[] = []
   for (const [df, dr] of directions) {
     let file = from.file + df
@@ -40,16 +40,16 @@ function slidingSquares(board: Board, from: Square, color: Color, directions: nu
   return result
 }
 
-function pawnForward(color: Color): number {
+function pawnForward(color: Color) {
   return color === 'white' ? -1 : 1
 }
 
-export function pawnAttackSquares(from: Square, color: Color): Square[] {
+export function pawnAttackSquares(from: Square, color: Color) {
   const dr = pawnForward(color)
   return [sq(from.file - 1, from.rank + dr), sq(from.file + 1, from.rank + dr)].filter(isOnBoard)
 }
 
-export function attackSquares(board: Board, from: Square, piece: Piece): Square[] {
+export function attackSquares(board: Board, from: Square, piece: Piece) {
   switch (piece.type) {
     case 'pawn':
       return pawnAttackSquares(from, piece.color)
@@ -66,7 +66,7 @@ export function attackSquares(board: Board, from: Square, piece: Piece): Square[
   }
 }
 
-export function isSquareAttacked(board: Board, target: Square, byColor: Color): boolean {
+export function isSquareAttacked(board: Board, target: Square, byColor: Color) {
   for (const [square, piece] of board.pieces()) {
     if (piece.color !== byColor) continue
     if (attackSquares(board, square, piece).some((s) => sameSquare(s, target))) {
@@ -76,11 +76,11 @@ export function isSquareAttacked(board: Board, target: Square, byColor: Color): 
   return false
 }
 
-export function isEnPassantCapture(board: Board, piece: Piece, from: Square, to: Square): boolean {
+export function isEnPassantCapture(board: Board, piece: Piece, from: Square, to: Square) {
   return piece.type === 'pawn' && to.file !== from.file && board.get(to) == null
 }
 
-function pawnMoves(board: Board, from: Square, color: Color, enPassantTarget: Square | null): Square[] {
+function pawnMoves(board: Board, from: Square, color: Color, enPassantTarget: Square | null) {
   const result: Square[] = []
   const dr = pawnForward(color)
   const oneStep = sq(from.file, from.rank + dr)
@@ -109,7 +109,7 @@ export const CASTLING_SIDES = [
   { rookFile: 0, rookTo: 3, kingTo: 2, emptyFiles: [1, 2, 3], safeFiles: [2, 3] },
 ]
 
-function castlingMoves(board: Board, from: Square, piece: Piece): Square[] {
+function castlingMoves(board: Board, from: Square, piece: Piece) {
   if (piece.hasMoved) return []
   const enemy = otherColor(piece.color)
   if (isSquareAttacked(board, from, enemy)) return []
@@ -128,7 +128,7 @@ function castlingMoves(board: Board, from: Square, piece: Piece): Square[] {
   return result
 }
 
-export function pseudoLegalMoves(board: Board, from: Square, piece: Piece, enPassantTarget: Square | null): Square[] {
+export function pseudoLegalMoves(board: Board, from: Square, piece: Piece, enPassantTarget: Square | null) {
   let targets: Square[]
   switch (piece.type) {
     case 'pawn':

@@ -28,19 +28,19 @@ const FEN_LETTER: Record<PieceType, string> = {
   king: 'k',
 }
 
-export function fileLetter(file: number): string {
+export function fileLetter(file: number) {
   return String.fromCharCode(97 + file)
 }
 
-export function algebraic(s: Square): string {
+export function algebraic(s: Square) {
   return `${fileLetter(s.file)}${8 - s.rank}`
 }
 
-export function fromAlgebraic(s: string): Square {
+export function fromAlgebraic(s: string) {
   return { file: s.charCodeAt(0) - 97, rank: 8 - Number(s[1]) }
 }
 
-export function sanLetter(type: PieceType): string {
+export function sanLetter(type: PieceType) {
   return SAN_LETTER[type]
 }
 
@@ -52,7 +52,7 @@ export function buildSanCore(
   isCapture: boolean,
   castleSide: 'kingside' | 'queenside' | null,
   promotion?: PieceType,
-): string {
+) {
   if (castleSide === 'kingside') return 'O-O'
   if (castleSide === 'queenside') return 'O-O-O'
 
@@ -84,7 +84,7 @@ export function buildSanCore(
   return san
 }
 
-function castlingRights(board: Board): string {
+function castlingRights(board: Board) {
   const isUnmoved = (square: Square, type: PieceType) => {
     const piece = board.get(square)
     return piece != null && piece.type === type && !piece.hasMoved
@@ -102,7 +102,7 @@ function castlingRights(board: Board): string {
   return rights || '-'
 }
 
-export function toFEN(game: Game): string {
+export function toFEN(game: Game) {
   const rows: string[] = []
   for (let rank = 0; rank < 8; rank++) {
     let row = ''
@@ -131,7 +131,7 @@ export function toFEN(game: Game): string {
   return `${rows.join('/')} ${turn} ${castlingRights(game.board)} ${ep} ${game.halfmoveClock} ${fullmove}`
 }
 
-export function toPGN(game: Game): string {
+export function toPGN(game: Game) {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '.')
   let outcome = '*'
   if (game.result?.outcome === 'checkmate') outcome = game.result.loser === 'white' ? '0-1' : '1-0'
