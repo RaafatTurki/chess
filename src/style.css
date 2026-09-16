@@ -156,6 +156,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  container-type: size;
 }
 
 .panel {
@@ -226,8 +227,8 @@ body {
   display: grid;
   grid-template-columns: var(--label-size) repeat(8, 1fr) var(--label-size);
   grid-template-rows: var(--label-size) repeat(8, 1fr) var(--label-size);
-  width: min(100%, 960px);
-  max-height: 100%;
+  width: min(100cqw, 100cqh, 960px);
+  height: min(100cqw, 100cqh, 960px);
   aspect-ratio: 1;
 }
 
@@ -541,6 +542,12 @@ body {
     flex: 0 1 auto;
     width: 100%;
     padding: 12px;
+    container-type: normal;
+  }
+
+  #board-grid {
+    width: min(100%, 960px);
+    height: auto;
   }
 
   .panel {
