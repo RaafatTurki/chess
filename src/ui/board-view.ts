@@ -267,13 +267,25 @@ export class BoardView {
       document.removeEventListener('pointermove', onMove)
       document.removeEventListener('pointerup', onUp)
       document.removeEventListener('pointercancel', onUp)
+      document.removeEventListener('contextmenu', onContextMenu)
       if (dragging) this.endDrag(ev)
       else this.tryMoveOrSelect(from)
+    }
+
+    const onContextMenu = (ev: MouseEvent) => {
+      if (!dragging) return
+      ev.preventDefault()
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onUp)
+      document.removeEventListener('contextmenu', onContextMenu)
+      this.cancelDrag()
     }
 
     document.addEventListener('pointermove', onMove)
     document.addEventListener('pointerup', onUp)
     document.addEventListener('pointercancel', onUp)
+    document.addEventListener('contextmenu', onContextMenu)
   }
 
   private beginDrag(pieceId: number, from: Square) {
@@ -304,6 +316,15 @@ export class BoardView {
     this.dragHoverEl?.classList.remove('drag-hover')
     el?.classList.add('drag-hover')
     this.dragHoverEl = el
+  }
+
+  private cancelDrag() {
+    this.dragEntry?.el.classList.remove('dragging')
+    this.dragPieceId = null
+    this.dragEntry = null
+    this.updateDragHover(null)
+    this.deselect()
+    this.render()
   }
 
   private endDrag(ev: PointerEvent) {
