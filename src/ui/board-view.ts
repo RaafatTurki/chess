@@ -8,6 +8,9 @@ import { sounds } from './sounds.ts'
 const PROMO_CHOICES: PieceType[] = ['queen', 'rook', 'bishop', 'knight']
 const SQUARE_PERCENT = 100 / 8
 const DRAG_THRESHOLD_PX = 4
+const ARROWHEAD_STROKE_WIDTH = 0.16
+const ARROWHEAD_MARKER_SIZE = 2.8
+const ARROWHEAD_REACH = ARROWHEAD_STROKE_WIDTH * ARROWHEAD_MARKER_SIZE
 
 interface PieceEl {
   el: HTMLDivElement
@@ -34,6 +37,12 @@ export class BoardView {
   private game: Game
   private onChange: () => void
 
+  private annotationLayer: SVGSVGElement
+  private arrows: { from: Square; to: Square }[] = []
+  private circles: Square[] = []
+  private rightDragStart: Square | null = null
+  private rightDragCurrent: Square | null = null
+
   constructor(container: HTMLElement, game: Game, onChange: () => void) {
     this.game = game
     this.onChange = onChange
@@ -51,10 +60,16 @@ export class BoardView {
     this.pieceLayer.className = 'piece-layer'
     this.rootEl.appendChild(this.pieceLayer)
 
+    this.annotationLayer = this.buildAnnotationLayer()
+    this.rootEl.appendChild(this.annotationLayer)
+
     const picker = this.buildPromoPicker()
     this.promoEl = picker.el
     this.promoButtons = picker.buttons
     container.appendChild(this.promoEl)
+
+    this.rootEl.addEventListener('contextmenu', (e) => e.preventDefault())
+    this.rootEl.addEventListener('pointerdown', (e) => this.handleBoardPointerDown(e))
 
     this.render()
   }
@@ -62,6 +77,9 @@ export class BoardView {
   reset() {
     this.deselect()
     this.dragPieceId = null
+    this.arrows = []
+    this.circles = []
+    this.renderAnnotations()
     this.render()
   }
 
@@ -242,6 +260,7 @@ export class BoardView {
   }
 
   private handlePointerDown(e: PointerEvent, pieceId: number) {
+    if (e.button !== 0) return
     if (this.inputLocked) return
     const from = this.pieceSquares.get(pieceId)
     if (from == null) return
@@ -343,5 +362,157 @@ export class BoardView {
       this.deselect()
       this.render()
     }
+  }
+
+  private buildAnnotationLayer() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('class', 'annotation-layer')
+    svg.setAttribute('viewBox', '0 0 8 8')
+    svg.setAttribute('preserveAspectRatio', 'none')
+
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+    marker.setAttribute('id', 'annotation-arrowhead')
+    marker.setAttribute('viewBox', '0 0 10 10')
+    marker.setAttribute('refX', '0')
+    marker.setAttribute('refY', '5')
+    marker.setAttribute('markerWidth', `${ARROWHEAD_MARKER_SIZE}`)
+    marker.setAttribute('markerHeight', `${ARROWHEAD_MARKER_SIZE}`)
+    marker.setAttribute('orient', 'auto-start-reverse')
+    const arrowheadPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    arrowheadPath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z')
+    arrowheadPath.setAttribute('fill', 'var(--annotation)')
+    marker.appendChild(arrowheadPath)
+    defs.appendChild(marker)
+    svg.appendChild(defs)
+
+    return svg
+  }
+
+  private handleBoardPointerDown(e: PointerEvent) {
+    if (e.button === 2) {
+      if (this.dragPieceId == null) this.startAnnotationDrag(e)
+    } else if (e.button === 0) {
+      this.clearAnnotations()
+    }
+  }
+
+  private startAnnotationDrag(e: PointerEvent) {
+    const start = this.squareAtPoint(e.clientX, e.clientY)
+    if (start == null) return
+    e.preventDefault()
+    this.rightDragStart = start
+    this.rightDragCurrent = start
+    this.renderAnnotations()
+
+    const onMove = (ev: PointerEvent) => {
+      const square = this.squareAtPoint(ev.clientX, ev.clientY)
+      if (square != null) this.rightDragCurrent = square
+      this.renderAnnotations()
+    }
+
+    const finish = (endSquare: Square | null) => {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onCancel)
+      const from = this.rightDragStart!
+      const to = endSquare ?? this.rightDragCurrent!
+      this.rightDragStart = null
+      this.rightDragCurrent = null
+      if (sameSquare(from, to)) this.toggleCircle(from)
+      else this.toggleArrow(from, to)
+      this.renderAnnotations()
+    }
+
+    const onUp = (ev: PointerEvent) => {
+      if (ev.button !== 2) return
+      finish(this.squareAtPoint(ev.clientX, ev.clientY))
+    }
+
+    const onCancel = () => {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onCancel)
+      this.rightDragStart = null
+      this.rightDragCurrent = null
+      this.renderAnnotations()
+    }
+
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
+    document.addEventListener('pointercancel', onCancel)
+  }
+
+  private toggleArrow(from: Square, to: Square) {
+    const idx = this.arrows.findIndex((a) => sameSquare(a.from, from) && sameSquare(a.to, to))
+    if (idx >= 0) this.arrows.splice(idx, 1)
+    else this.arrows.push({ from, to })
+  }
+
+  private toggleCircle(square: Square) {
+    const idx = this.circles.findIndex((s) => sameSquare(s, square))
+    if (idx >= 0) this.circles.splice(idx, 1)
+    else this.circles.push(square)
+  }
+
+  private clearAnnotations() {
+    if (this.arrows.length === 0 && this.circles.length === 0) return
+    this.arrows = []
+    this.circles = []
+    this.renderAnnotations()
+  }
+
+  private renderAnnotations() {
+    for (const child of [...this.annotationLayer.children]) {
+      if (child.tagName !== 'defs') child.remove()
+    }
+
+    for (const square of this.circles) {
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      circle.setAttribute('class', 'annotation-circle')
+      circle.setAttribute('cx', `${square.file + 0.5}`)
+      circle.setAttribute('cy', `${square.rank + 0.5}`)
+      circle.setAttribute('r', '0.42')
+      this.annotationLayer.appendChild(circle)
+    }
+
+    for (const arrow of this.arrows) this.annotationLayer.appendChild(this.buildArrowEl(arrow.from, arrow.to))
+
+    if (this.rightDragStart != null && this.rightDragCurrent != null) {
+      if (sameSquare(this.rightDragStart, this.rightDragCurrent)) {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+        circle.setAttribute('class', 'annotation-circle annotation-preview')
+        circle.setAttribute('cx', `${this.rightDragStart.file + 0.5}`)
+        circle.setAttribute('cy', `${this.rightDragStart.rank + 0.5}`)
+        circle.setAttribute('r', '0.42')
+        this.annotationLayer.appendChild(circle)
+      } else {
+        const arrowEl = this.buildArrowEl(this.rightDragStart, this.rightDragCurrent)
+        arrowEl.classList.add('annotation-preview')
+        this.annotationLayer.appendChild(arrowEl)
+      }
+    }
+  }
+
+  private buildArrowEl(from: Square, to: Square) {
+    const x1 = from.file + 0.5
+    const y1 = from.rank + 0.5
+    const x2 = to.file + 0.5
+    const y2 = to.rank + 0.5
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const length = Math.hypot(dx, dy)
+    const shorten = Math.min(ARROWHEAD_REACH, length)
+    const ex = length === 0 ? x2 : x2 - (dx / length) * shorten
+    const ey = length === 0 ? y2 : y2 - (dy / length) * shorten
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    line.setAttribute('class', 'annotation-arrow')
+    line.setAttribute('x1', `${x1}`)
+    line.setAttribute('y1', `${y1}`)
+    line.setAttribute('x2', `${ex}`)
+    line.setAttribute('y2', `${ey}`)
+    line.setAttribute('marker-end', 'url(#annotation-arrowhead)')
+    return line
   }
 }

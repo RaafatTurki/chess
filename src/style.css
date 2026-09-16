@@ -11,6 +11,7 @@
   --danger: #e5484d;
   --valid: #34c759;
   --warn: #ff9f0a;
+  --annotation: var(--danger);
   --ink: 0, 0, 0;
   --paper: 255, 255, 255;
   --border: rgba(var(--paper), 0.16);
@@ -25,6 +26,7 @@
   --z-piece: 1;
   --z-piece-hover: 5;
   --z-piece-dragging: 10;
+  --z-annotation: 15;
   --z-overlay: 20;
 
   --dur-fast: 0.15s ease;
@@ -401,6 +403,34 @@ body {
   inset: 0;
   z-index: var(--z-piece);
   pointer-events: none;
+}
+
+.annotation-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-annotation);
+  pointer-events: none;
+}
+
+.annotation-arrow {
+  stroke: var(--annotation);
+  stroke-width: 0.16;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0.85;
+}
+
+.annotation-circle {
+  stroke: var(--annotation);
+  stroke-width: 0.09;
+  fill: none;
+  opacity: 0.85;
+}
+
+.annotation-preview {
+  opacity: 0.5;
 }
 
 .piece {
