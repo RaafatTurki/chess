@@ -5,4 +5,4 @@ set -euo pipefail
 
 git fetch && git reset --hard @{u}
 
-docker compose -f compose.simple.yml up -d --build
+docker compose -f compose.simple.yml up -d --build --force-recreate
