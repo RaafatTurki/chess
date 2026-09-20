@@ -476,8 +476,7 @@ export class BoardView {
       this.annotationLayer.appendChild(circle)
     }
 
-    for (const arrow of this.arrows) this.annotationLayer.appendChild(this.buildArrowEl(arrow.from, arrow.to))
-
+    let previewArrow: { from: Square; to: Square; preview: true } | null = null
     if (this.rightDragStart != null && this.rightDragCurrent != null) {
       if (sameSquare(this.rightDragStart, this.rightDragCurrent)) {
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
@@ -487,32 +486,79 @@ export class BoardView {
         circle.setAttribute('r', '0.42')
         this.annotationLayer.appendChild(circle)
       } else {
-        const arrowEl = this.buildArrowEl(this.rightDragStart, this.rightDragCurrent)
-        arrowEl.classList.add('annotation-preview')
-        this.annotationLayer.appendChild(arrowEl)
+        previewArrow = { from: this.rightDragStart, to: this.rightDragCurrent, preview: true }
+      }
+    }
+
+    const allArrows: { from: Square; to: Square; preview: boolean }[] = this.arrows.map((a) => ({
+      ...a,
+      preview: false,
+    }))
+    if (previewArrow) allArrows.push(previewArrow)
+
+    const segmentGroups = allArrows.map((arrow) => ({
+      preview: arrow.preview,
+      segments: this.getArrowSegments(arrow.from, arrow.to),
+    }))
+
+    for (const { preview, segments } of segmentGroups) {
+      for (const seg of segments.filter((s) => !s.withHead)) {
+        this.annotationLayer.appendChild(this.buildArrowSegment(seg, preview))
+      }
+    }
+    for (const { preview, segments } of segmentGroups) {
+      for (const seg of segments.filter((s) => s.withHead)) {
+        this.annotationLayer.appendChild(this.buildArrowSegment(seg, preview))
       }
     }
   }
 
-  private buildArrowEl(from: Square, to: Square) {
+  private getArrowSegments(from: Square, to: Square) {
+    const fileDelta = to.file - from.file
+    const rankDelta = to.rank - from.rank
+    const isKnightShape =
+      (Math.abs(fileDelta) === 1 && Math.abs(rankDelta) === 2) ||
+      (Math.abs(fileDelta) === 2 && Math.abs(rankDelta) === 1)
+    const isKnightMove = isKnightShape && this.game.board.get(from)?.type === 'knight'
+
     const x1 = from.file + 0.5
     const y1 = from.rank + 0.5
     const x2 = to.file + 0.5
     const y2 = to.rank + 0.5
-    const dx = x2 - x1
-    const dy = y2 - y1
+
+    if (!isKnightMove) return [{ x1, y1, x2, y2, withHead: true }]
+
+    const bendX = Math.abs(fileDelta) === 2 ? x1 + fileDelta : x1
+    const bendY = Math.abs(rankDelta) === 2 ? y1 + rankDelta : y1
+    return [
+      { x1, y1, x2: bendX, y2: bendY, withHead: false },
+      { x1: bendX, y1: bendY, x2, y2, withHead: true },
+    ]
+  }
+
+  private shortenSegmentEnd(seg: { x1: number; y1: number; x2: number; y2: number; withHead: boolean }) {
+    if (!seg.withHead) return seg
+    const dx = seg.x2 - seg.x1
+    const dy = seg.y2 - seg.y1
     const length = Math.hypot(dx, dy)
     const shorten = Math.min(ARROWHEAD_REACH, length)
-    const ex = length === 0 ? x2 : x2 - (dx / length) * shorten
-    const ey = length === 0 ? y2 : y2 - (dy / length) * shorten
+    const x2 = length === 0 ? seg.x2 : seg.x2 - (dx / length) * shorten
+    const y2 = length === 0 ? seg.y2 : seg.y2 - (dy / length) * shorten
+    return { ...seg, x2, y2 }
+  }
 
+  private buildArrowSegment(
+    seg: { x1: number; y1: number; x2: number; y2: number; withHead: boolean },
+    preview: boolean,
+  ) {
+    const { x1, y1, x2, y2 } = this.shortenSegmentEnd(seg)
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-    line.setAttribute('class', 'annotation-arrow')
+    line.setAttribute('class', preview ? 'annotation-arrow annotation-preview' : 'annotation-arrow')
     line.setAttribute('x1', `${x1}`)
     line.setAttribute('y1', `${y1}`)
-    line.setAttribute('x2', `${ex}`)
-    line.setAttribute('y2', `${ey}`)
-    line.setAttribute('marker-end', 'url(#annotation-arrowhead)')
+    line.setAttribute('x2', `${x2}`)
+    line.setAttribute('y2', `${y2}`)
+    if (seg.withHead) line.setAttribute('marker-end', 'url(#annotation-arrowhead)')
     return line
   }
 }
